@@ -1,0 +1,37 @@
+h1. Introduction
+
+Persistentcachingmap is a Java Map implementation designed for storing and persisting large map like data structures.
+
+
+
+h1. Why?
+
+This is useful when working with large map like data structures that don't quite fit into memory. While you could
+use a database or a key value store, sometimes that is a bit overkill. Similar to my other project (geokv), this map
+uses a google guava lru cache for caching map buckets in memory. This means that if you access keys in a sensible way,
+you can avoid needless disk activity and pretend to be working with an extremely large in memory Map.
+
+I intend to use this for e.g. processing open street map nodes, ways, and relations without having to import the xml into
+a database.
+
+h1. Caveats
+
+* Avoid randomly accessing keys, this invalidates the cache often and means you are much worse off relative to using a database.
+* Forget about ACID. This is not intended as a database and you can and will lose data if your process dies for whatever reason. 
+
+Consider yourself warned. Otherwise it is all good :-).
+
+h1. Installation
+
+It's a maven project. So, checking it out and doing a mvn clean install should do the trick. You will need my geotools project as well, which you can find here: https://github.com/jillesvangurp/persistentcachingmap.
+
+Alternatively, you can exercise your rights under the license and simply copy and adapt. The "license":https://github.com/jillesvangurp/persistentcachingmap/blob/master/LICENSE allows you to do this and I have no problems with this.
+
+Should anyone like this licensed differently, please contact me.
+
+If anyone wants to fix stuff just send me a pull request.
+
+h1. Changelog
+
+* 1.0 (TODO)
+** First release of GeoKV
