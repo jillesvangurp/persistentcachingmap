@@ -34,4 +34,4 @@ If anyone wants to fix stuff just send me a pull request.
 h1. Changelog
 
 * 1.0 (TODO)
-** First release of GeoKV
+** First release
