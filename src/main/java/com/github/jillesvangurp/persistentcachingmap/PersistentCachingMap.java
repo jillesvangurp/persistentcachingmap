@@ -165,12 +165,22 @@ public class PersistentCachingMap<Key,Value> implements Iterable<Map.Entry<Key,V
     }
 
     void writeBucketIds() {
-        try(BufferedWriter out = gzipFileWriter(new File(dataDir,"bucketIds.gz"))) {
-            for(Long id: bucketIds) {
-                out.write("" + id +"\n");
+        if(bucketIds.size() > 0) {
+            File path = new File(dataDir,"bucketIds.gz");
+            File dir = path.getParentFile();
+            if (!dir.exists()) {
+                if (!dir.mkdirs()) {
+                    throw new IllegalStateException("could not create directory " + dir);
+                }
             }
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
+
+            try(BufferedWriter out = gzipFileWriter(path)) {
+                for(Long id: bucketIds) {
+                    out.write("" + id +"\n");
+                }
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
         }
     }
 
