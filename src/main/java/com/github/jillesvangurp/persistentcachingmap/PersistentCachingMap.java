@@ -38,9 +38,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutionException;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
 import org.apache.commons.lang.StringUtils;
 
 import com.google.common.cache.CacheBuilder;
@@ -174,7 +174,7 @@ public class PersistentCachingMap<Key,Value> implements Iterable<Map.Entry<Key,V
                 }
             }
 
-            try(BufferedWriter out = gzipFileWriter(path)) {
+            try(BufferedWriter out = bzipFileWriter(path)) {
                 for(Long id: bucketIds) {
                     out.write("" + id +"\n");
                 }
@@ -187,7 +187,7 @@ public class PersistentCachingMap<Key,Value> implements Iterable<Map.Entry<Key,V
     void readBucketIds() {
         File bucketIdFile = new File(dataDir,"bucketIds.gz");
         if(bucketIdFile.exists()) {
-            try(LineIterable iterable = new LineIterable(gzipFileReader(bucketIdFile))) {
+            try(LineIterable iterable = new LineIterable(bzipFileReader(bucketIdFile))) {
                 for(String line: iterable) {
                     bucketIds.add(Long.valueOf(line.trim()));
                 }
@@ -275,12 +275,13 @@ public class PersistentCachingMap<Key,Value> implements Iterable<Map.Entry<Key,V
         return Iterables.compose(iterables).iterator();
     }
 
-    private static BufferedWriter gzipFileWriter(File file) throws IOException {
-        return new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(file)), Charset.forName("utf-8")),64*1024);
+
+    private static BufferedWriter bzipFileWriter(File file) throws IOException {
+        return new BufferedWriter(new OutputStreamWriter(new BZip2CompressorOutputStream(new FileOutputStream(file)), Charset.forName("utf-8")),64*1024);
     }
 
-    private static BufferedReader gzipFileReader(File file) throws IOException {
-        return new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(file)),Charset.forName("utf-8")));
+    private static BufferedReader bzipFileReader(File file) throws IOException {
+        return new BufferedReader(new InputStreamReader(new BZip2CompressorInputStream(new FileInputStream(file)),Charset.forName("utf-8")));
     }
 
     public class Bucket implements Iterable<Map.Entry<Key, Value>> {
@@ -323,7 +324,7 @@ public class PersistentCachingMap<Key,Value> implements Iterable<Map.Entry<Key,V
                         throw new IllegalStateException("could not create directory " + dir);
                     }
                 }
-                try (BufferedWriter out = gzipFileWriter(path)) {
+                try (BufferedWriter out = bzipFileWriter(path)) {
                     for (Entry<Key, Value> e : map.entrySet()) {
                         out.write("" + codec.serializeKey(e.getKey()) + ";" + codec.serializeValue(e.getValue()) + "\n");
                     }
@@ -336,7 +337,7 @@ public class PersistentCachingMap<Key,Value> implements Iterable<Map.Entry<Key,V
         public void read() {
             File path = bucketPath(id);
             if(path.exists()) {
-                try(LineIterable iterable = new LineIterable(gzipFileReader(path))) {
+                try(LineIterable iterable = new LineIterable(bzipFileReader(path))) {
                     for(String line: iterable) {
                         int idx = line.indexOf(';');
                         Key key = codec.deserializeKey(line.substring(0,idx));
