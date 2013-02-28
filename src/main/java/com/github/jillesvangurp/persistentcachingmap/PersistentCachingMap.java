@@ -128,7 +128,9 @@ public class PersistentCachingMap<Key, Value> implements Iterable<Map.Entry<Key,
         try {
             long bucketId = codec.bucketId((Key) key);
             if (bucketIds.contains(bucketId)) {
-                return cache.get(bucketId).get((Key) key);
+                Value value = cache.get(bucketId).get((Key) key);
+                // return a clone,  this ensures people don't accidentally modify objects in the map.
+                return codec.deserializeValue(codec.serializeValue(value));
             }
         } catch (ExecutionException e) {
             e.printStackTrace();
