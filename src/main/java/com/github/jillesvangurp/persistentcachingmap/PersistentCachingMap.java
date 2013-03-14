@@ -283,7 +283,7 @@ public class PersistentCachingMap<Key, Value> implements Iterable<Map.Entry<Key,
 
     @Override
     public Iterator<java.util.Map.Entry<Key, Value>> iterator() {
-        Processor<Long, Iterable<java.util.Map.Entry<Key, Value>>> processor = new Processor<Long, Iterable<Entry<Key, Value>>>() {
+        Processor<Long, Iterable<Entry<Key, Value>>> processor = new Processor<Long, Iterable<Entry<Key, Value>>>() {
 
             @Override
             public Iterable<java.util.Map.Entry<Key, Value>> process(Long bucketId) {
@@ -422,7 +422,32 @@ public class PersistentCachingMap<Key, Value> implements Iterable<Map.Entry<Key,
         }
 
         @Override
-        public Iterator<java.util.Map.Entry<Key, Value>> iterator() {
+        public Iterator<Entry<Key, Value>> iterator() {
+            new ProcessingIterable<>(map.entrySet().iterator(), new Processor<Entry<Key, Value>, Entry<Key, Value>>() {
+
+                @Override
+                public Entry<Key, Value> process(final Entry<Key, Value> input) {
+
+                    return new Entry<Key, Value>() {
+
+                        @Override
+                        public Key getKey() {
+                            return input.getKey();
+                        }
+
+                        @Override
+                        public Value getValue() {
+                            // return a clone
+                            return codec.deserializeValue(codec.serializeValue(input.getValue()));
+                        }
+
+                        @Override
+                        public Value setValue(Value value) {
+                            throw new UnsupportedOperationException("immutable");
+                        }};
+                }
+            });
+
             return map.entrySet().iterator();
         }
     }
